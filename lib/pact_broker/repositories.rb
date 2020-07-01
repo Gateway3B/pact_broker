@@ -3,6 +3,11 @@ require 'pact_broker/pacts/repository'
 
 module PactBroker
   module Repositories
+    def results_repository
+      require 'pact_broker/results/repository'
+      Results::Repository.new
+    end
+
     def pacticipant_repository
       require 'pact_broker/pacticipants/repository'
       Pacticipants::Repository.new

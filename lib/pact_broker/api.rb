@@ -22,6 +22,12 @@ module PactBroker
         add ['pacts', 'provider', :provider_name, 'consumer', :consumer_name, 'versions', :consumer_version_number], Api::Resources::Pact, {resource_name: "pact_publication", deprecated: true} # Not the standard URL, but keep for backwards compatibility
         add ['pacts', 'provider', :provider_name, 'consumer', :consumer_name, 'tag', :tag], Api::Resources::TaggedPactVersions, {resource_name: "tagged_pact_publications"}
 
+        # Results
+        add ['results'], Api::Resources::
+        add ['results', 'logs', :id], Api::Resources::
+        add ['results', 'search'], Api::Resrouces::
+
+
         # Pacts
         add ['pacts', 'provider', :provider_name, 'consumer', :consumer_name, 'version', :consumer_version_number], Api::Resources::Pact, {resource_name: "pact_publication"}
         add ['pacts', 'provider', :provider_name, 'consumer', :consumer_name, 'pact-version', :pact_version_sha], Api::Resources::PactVersion, {resource_name: "pact_publication"}

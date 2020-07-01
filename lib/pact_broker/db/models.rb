@@ -24,7 +24,8 @@ module PactBroker
     PactBroker::Domain::Tag,
     PactBroker::Domain::Version,
     PactBroker::Domain::Label,
-    PactBroker::Domain::Pacticipant
+    PactBroker::Domain::Pacticipant,
+    PactBroker::Domain::Result
   ]
 
   module DB
