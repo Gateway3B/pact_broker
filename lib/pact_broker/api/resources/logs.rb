@@ -16,8 +16,6 @@ module PactBroker
           ]
         end
 
-        # Remember to update latest_verification_id_for_pact_version_and_provider_version
-        # if/when DELETE is implemented
         def allowed_methods
           ["GET", "OPTIONS"]
         end
@@ -35,14 +33,10 @@ module PactBroker
           decorator_for(verification).to_json(user_options: { base_url: base_url })
         end
 
-        def to_extended_json
-          extended_decorator_for(verification).to_json(user_options: { base_url: base_url })
-        end
-
         private
 
         def verification
-          @verification ||= verification_service.find_by_logs_id(identifier_from_path)
+          @verification ||= verification_service.find_by_logs_id(identifier_from_path[:logsID])
         end
 
         def decorator_for model
