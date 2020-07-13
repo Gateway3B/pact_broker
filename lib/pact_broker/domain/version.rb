@@ -7,6 +7,7 @@ module PactBroker
   module Domain
     class Version < Sequel::Model
       plugin :timestamps, update_on_create: true
+      plugin :insert_ignore, identifying_columns: [:pacticipant_id, :number]
 
       set_primary_key :id
       one_to_many :pact_publications, order: :revision_number, class: "PactBroker::Pacts::PactPublication", key: :consumer_version_id
@@ -86,7 +87,9 @@ module PactBroker
       end
 
       def after_create
+        super
         OrderVersions.(self)
+        refresh
       end
 
       def before_destroy

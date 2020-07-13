@@ -50,7 +50,11 @@ module PactBroker
         end
 
         def resource_exists?
-          !!pact
+          !!resource
+        end
+
+        def resource
+          pact
         end
 
         def from_json

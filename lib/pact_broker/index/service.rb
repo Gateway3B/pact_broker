@@ -28,51 +28,11 @@ module PactBroker
       # and the Pactflow UI. It really needs to be broken into to separate methods, as it's getting too messy
       # supporting both
 
+      def self.pact_publication_scope
+        PactBroker.policy_scope!(PactBroker::Pacts::PactPublication)
+      end
+
       def self.find_index_items options = {}
-        if options[:optimised]
-          find_index_items_optimised(options)
-        else
-          find_index_items_original(options)
-        end
-      end
-
-      def self.find_index_items_original options = {}
-        rows = PactBroker::Matrix::HeadRow
-          .select_all_qualified
-          .eager(:latest_triggered_webhooks)
-          .eager(:webhooks)
-
-        if !options[:tags]
-          # server side rendered index page without tags
-          rows = rows.where(consumer_version_tag_name: nil)
-        else
-          # server side rendered index page with tags=true or tags[]=a&tags=[]b
-          if options[:tags].is_a?(Array)
-            rows = rows.where(consumer_version_tag_name: options[:tags]).or(consumer_version_tag_name: nil)
-          end
-          rows = rows.eager(:consumer_version_tags)
-                      .eager(:provider_version_tags)
-                      .eager(:latest_verification_for_consumer_version_tag)
-                      .eager(:latest_verification_for_consumer_and_provider)
-        end
-        rows = rows.all.group_by(&:pact_publication_id).values.collect{ | rows| Matrix::AggregatedRow.new(rows) }
-
-        rows.sort.collect do | row |
-          PactBroker::Domain::IndexItem.create(
-            row.consumer,
-            row.provider,
-            row.pact,
-            row.overall_latest?,
-            row.latest_verification_for_pseudo_branch,
-            row.webhooks,
-            row.latest_triggered_webhooks,
-            options[:tags] ? row.consumer_head_tag_names : [],
-            options[:tags] ? row.provider_version_tags.select(&:latest?) : []
-          )
-        end
-      end
-
-      def self.find_index_items_optimised options = {}
         latest_verifications_for_cv_tags = latest_verifications_for_consumer_version_tags(options)
         latest_pact_publication_ids = latest_pact_publications.select(:id).all.collect{ |h| h[:id] }
 
@@ -82,7 +42,7 @@ module PactBroker
         pact_publication_ids = head_pact_publication_ids(options)
         pagination_record_count = pact_publication_ids.pagination_record_count
 
-        pact_publications = PactBroker::Pacts::PactPublication
+        pact_publications = pact_publication_scope
           .where(id: pact_publication_ids)
           .select_all_qualified
           .eager(:consumer)
@@ -144,7 +104,7 @@ module PactBroker
         latest_pact_publication_ids = latest_pact_publications.select(:id).all.collect{ |h| h[:id] }
         pact_publication_ids = head_pact_publication_ids(consumer_name: consumer_name, provider_name: provider_name, tags: true)
 
-        pact_publications = PactBroker::Pacts::PactPublication
+        pact_publications = pact_publication_scope
           .where(id: pact_publication_ids)
           .select_all_qualified
           .eager(:consumer)

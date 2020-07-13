@@ -6,6 +6,8 @@ module PactBroker
   module Pacts
     class PactVersion < Sequel::Model(:pact_versions)
       plugin :timestamps
+      plugin :upsert, identifying_columns: [:consumer_id, :provider_id, :sha]
+
       one_to_many :pact_publications, reciprocal: :pact_version
       one_to_many :verifications, reciprocal: :verification, order: :id, class: "PactBroker::Domain::Verification"
       one_to_one :latest_verification, class: "PactBroker::Verifications::LatestVerificationForPactVersion", key: :pact_version_id, primary_key: :id
@@ -79,13 +81,10 @@ module PactBroker
           .join(:versions, Sequel[:versions][:id] => Sequel[:verifications][:provider_version_id])
           .any?
       end
-
-      def upsert
-        self.class.upsert(to_hash, [:consumer_id, :provider_id, :sha])
-      end
     end
   end
 end
+
 
 # Table: pact_versions
 # Columns:

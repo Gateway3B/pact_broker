@@ -7,7 +7,6 @@ require 'pact_broker/tags/head_pact_tags'
 module PactBroker
   module Pacts
     class PactPublication < Sequel::Model(:pact_publications)
-      UNIQUE_CONSTRAINT_KEYS = [:consumer_version_id, :provider_id, :revision_number].freeze
 
       extend Forwardable
 
@@ -21,6 +20,9 @@ module PactBroker
       associate(:many_to_one, :integration, class: "PactBroker::Integrations::Integration", key: [:consumer_id, :provider_id], primary_key: [:consumer_id, :provider_id])
       one_to_one(:latest_verification, class: "PactBroker::Verifications::LatestVerificationForPactVersion", key: :pact_version_id, primary_key: :pact_version_id)
       one_to_many(:head_pact_tags, class: "PactBroker::Tags::HeadPactTag", primary_key: :id, key: :pact_publication_id)
+
+      plugin :upsert, identifying_columns: [:consumer_version_id, :provider_id, :revision_number]
+      plugin :timestamps, update_on_create: true
 
       dataset_module do
         include PactBroker::Repositories::Helpers
@@ -69,6 +71,14 @@ module PactBroker
 
         def provider_name_like(name)
           where(name_like(Sequel[:providers][:name], name))
+        end
+
+        def consumer_name_like(name)
+          where(name_like(Sequel[:consumers][:name], name))
+        end
+
+        def consumer_version_number_like(number)
+          where(name_like(Sequel[:cv][:number], number))
         end
 
         def consumer_version_tag(tag)
@@ -150,20 +160,12 @@ module PactBroker
         OpenStruct.new(number: consumer_version.number, pacticipant: consumer, order: consumer_version.order)
       end
 
-      def upsert
-        params = to_hash.merge(created_at: Sequel.datetime_class.now)
-        self.id = PactPublication.upsert(params, UNIQUE_CONSTRAINT_KEYS).id
-        self.refresh
-      end
-
       private
 
       def cached_domain_for_delegation
         @domain_object ||= to_domain
       end
     end
-
-    PactPublication.plugin :timestamps, update_on_create: true
   end
 end
 

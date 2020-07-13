@@ -9,6 +9,9 @@ module PactBroker
     class Pacticipant < Sequel::Model
 
       include Messages
+      plugin :insert_ignore, identifying_columns: [:name]
+
+      plugin :timestamps, update_on_create: true
 
       set_primary_key :id
 
@@ -45,10 +48,12 @@ module PactBroker
         messages
       end
     end
-
-    Pacticipant.plugin :timestamps, update_on_create: true
   end
 end
+
+
+
+
 
 # Table: pacticipants
 # Columns:
